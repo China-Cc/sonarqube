@@ -29,7 +29,9 @@ import org.mockito.ArgumentCaptor;
 import org.sonar.api.platform.Server;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,7 @@ public class OAuth2AuthenticationParametersImplTest {
   @Test
   public void init_create_cookie_containing_parameters_from_request() {
     when(request.getParameter("return_to")).thenReturn("/settings");
+    when(request.getParameter("allowEmailShift")).thenReturn("true");
 
     underTest.init(request, response);
 
@@ -66,8 +69,35 @@ public class OAuth2AuthenticationParametersImplTest {
   }
 
   @Test
+  public void init_does_not_create_cookie_when_no_parameter() {
+    underTest.init(request, response);
+
+    verify(response, never()).addCookie(any(Cookie.class));
+  }
+
+  @Test
+  public void init_does_not_create_cookie_when_parameters_are_empty() {
+    when(request.getParameter("return_to")).thenReturn("");
+    when(request.getParameter("allowEmailShift")).thenReturn("");
+
+    underTest.init(request, response);
+
+    verify(response, never()).addCookie(any(Cookie.class));
+  }
+
+  @Test
+  public void init_does_not_create_cookie_when_parameters_are_null() {
+    when(request.getParameter("return_to")).thenReturn(null);
+    when(request.getParameter("allowEmailShift")).thenReturn(null);
+
+    underTest.init(request, response);
+
+    verify(response, never()).addCookie(any(Cookie.class));
+  }
+
+  @Test
   public void get_return_to_parameter() {
-    when(request.getCookies()).thenReturn(new Cookie[]{new Cookie(AUTHENTICATION_COOKIE_NAME, "{\"return_to\":\"/settings\"}")});
+    when(request.getCookies()).thenReturn(new Cookie[] {new Cookie(AUTHENTICATION_COOKIE_NAME, "{\"return_to\":\"/settings\"}")});
 
     Optional<String> redirection = underTest.getReturnTo(request);
 
@@ -77,7 +107,7 @@ public class OAuth2AuthenticationParametersImplTest {
 
   @Test
   public void get_return_to_is_empty_when_no_cookie() {
-    when(request.getCookies()).thenReturn(new Cookie[]{});
+    when(request.getCookies()).thenReturn(new Cookie[] {});
 
     Optional<String> redirection = underTest.getReturnTo(request);
 
@@ -86,7 +116,7 @@ public class OAuth2AuthenticationParametersImplTest {
 
   @Test
   public void get_return_to_is_empty_when_no_value() {
-    when(request.getCookies()).thenReturn(new Cookie[]{new Cookie(AUTHENTICATION_COOKIE_NAME, "{}")});
+    when(request.getCookies()).thenReturn(new Cookie[] {new Cookie(AUTHENTICATION_COOKIE_NAME, "{}")});
 
     Optional<String> redirection = underTest.getReturnTo(request);
 
@@ -94,8 +124,36 @@ public class OAuth2AuthenticationParametersImplTest {
   }
 
   @Test
+  public void get_allowEmailShift_parameter() {
+    when(request.getCookies()).thenReturn(new Cookie[] {new Cookie(AUTHENTICATION_COOKIE_NAME, "{\"allowEmailShift\":\"true\"}")});
+
+    Optional<Boolean> allowEmailShift = underTest.getAllowEmailShift(request);
+
+    assertThat(allowEmailShift).isNotEmpty();
+    assertThat(allowEmailShift.get()).isTrue();
+  }
+
+  @Test
+  public void get_allowEmailShift_is_empty_when_no_cookie() {
+    when(request.getCookies()).thenReturn(new Cookie[] {});
+
+    Optional<Boolean> allowEmailShift = underTest.getAllowEmailShift(request);
+
+    assertThat(allowEmailShift).isEmpty();
+  }
+
+  @Test
+  public void get_allowEmailShift_is_empty_when_no_value() {
+    when(request.getCookies()).thenReturn(new Cookie[] {new Cookie(AUTHENTICATION_COOKIE_NAME, "{}")});
+
+    Optional<Boolean> allowEmailShift = underTest.getAllowEmailShift(request);
+
+    assertThat(allowEmailShift).isEmpty();
+  }
+
+  @Test
   public void delete() {
-    when(request.getCookies()).thenReturn(new Cookie[]{new Cookie(AUTHENTICATION_COOKIE_NAME, "{\"return_to\":\"/settings\"}")});
+    when(request.getCookies()).thenReturn(new Cookie[] {new Cookie(AUTHENTICATION_COOKIE_NAME, "{\"return_to\":\"/settings\"}")});
 
     underTest.delete(request, response);
 
@@ -106,5 +164,4 @@ public class OAuth2AuthenticationParametersImplTest {
     assertThat(updatedCookie.getPath()).isEqualTo("/");
     assertThat(updatedCookie.getMaxAge()).isEqualTo(0);
   }
-
 }

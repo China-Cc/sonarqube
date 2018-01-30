@@ -36,6 +36,7 @@ import org.sonar.server.authentication.event.AuthenticationException;
 import static java.lang.String.format;
 import static org.sonar.server.authentication.AuthenticationError.handleAuthenticationError;
 import static org.sonar.server.authentication.AuthenticationError.handleError;
+import static org.sonar.server.authentication.AuthenticationRedirection.redirectTo;
 import static org.sonar.server.authentication.event.AuthenticationEvent.Source;
 
 public class InitFilter extends AuthenticationFilter {
@@ -77,6 +78,7 @@ public class InitFilter extends AuthenticationFilter {
       if (provider instanceof BaseIdentityProvider) {
         handleBaseIdentityProvider(request, response, (BaseIdentityProvider) provider);
       } else if (provider instanceof OAuth2IdentityProvider) {
+        oAuthOAuth2AuthenticationParameters.init(request, response);
         handleOAuth2IdentityProvider(request, response, (OAuth2IdentityProvider) provider);
       } else {
         handleError(response, format("Unsupported IdentityProvider class: %s", provider.getClass()));
@@ -85,6 +87,9 @@ public class InitFilter extends AuthenticationFilter {
       oAuthOAuth2AuthenticationParameters.delete(request, response);
       authenticationEvent.loginFailure(request, e);
       handleAuthenticationError(e, response, getContextPath());
+    } catch (EmailAlreadyExistException e) {
+      oAuthOAuth2AuthenticationParameters.delete(request, response);
+      redirectTo(response, e.getPath(getContextPath()));
     } catch (Exception e) {
       oAuthOAuth2AuthenticationParameters.delete(request, response);
       handleError(e, response, format("Fail to initialize authentication with provider '%s'", provider.getKey()));
@@ -105,7 +110,6 @@ public class InitFilter extends AuthenticationFilter {
 
   private void handleOAuth2IdentityProvider(HttpServletRequest request, HttpServletResponse response, OAuth2IdentityProvider provider) {
     try {
-      oAuthOAuth2AuthenticationParameters.init(request, response);
       provider.init(oAuth2ContextFactory.newContext(request, response, provider));
     } catch (UnauthorizedException e) {
       throw AuthenticationException.newBuilder()
