@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +65,7 @@ import org.sonar.server.rule.index.RuleIndexer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.difference;
+import static com.google.common.collect.Sets.intersection;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
@@ -109,6 +111,8 @@ public class RegisterRules implements Startable {
       Map<Integer, Set<SingleDeprecatedRuleKey>> existingDeprecatedRuleKeys = loadDeprecatedRuleKeys(dbSession);
 
       RulesDefinition.Context context = defLoader.load();
+
+      verifyRuleKeyConsistency(context);
 
       List<RulesDefinition.ExtendedRepository> repositories = getRepositories(context);
 
@@ -572,4 +576,45 @@ public class RegisterRules implements Startable {
     dbClient.ruleDao().update(session, rule);
   }
 
+
+  private static void verifyRuleKeyConsistency(RulesDefinition.Context context) {
+    List<RulesDefinition.Rule> allRules = context.repositories().stream()
+      .flatMap(r -> r.rules().stream())
+      .collect(MoreCollectors.toList());
+
+    List<RuleKey> definedRuleKeys = allRules.stream()
+      .map(r -> RuleKey.of(r.repository().key(), r.key()))
+      .collect(Collectors.toList());
+
+    List<RuleKey> definedDeprecatedRuleKeys = allRules.stream()
+      .flatMap(r -> r.deprecatedRuleKeys().stream())
+      .collect(Collectors.toList());
+
+    Set<RuleKey> duplicates = findDuplicates(definedDeprecatedRuleKeys);
+    if (!duplicates.isEmpty()) {
+      throw new IllegalStateException(format("The following deprecated rule keys are declared at least twice [%s]", duplicates.stream()
+        .map(RuleKey::toString).collect(Collectors.joining(","))
+      ));
+    }
+
+    Sets.SetView<RuleKey> intersection = intersection(new HashSet<>(definedRuleKeys), new HashSet<>(definedDeprecatedRuleKeys));
+    if (!intersection.isEmpty()) {
+      throw new IllegalStateException(format("The following rule keys are declared both as deprecated and used key [%s]", intersection.stream()
+        .map(RuleKey::toString).collect(Collectors.joining(","))
+      ));
+    }
+  }
+
+  private static <T> Set<T> findDuplicates(Collection<T> list) {
+    Set<T> duplicates = new HashSet<>();
+    Set<T> uniques = new HashSet<>();
+
+    for(T t : list) {
+      if(!uniques.add(t)) {
+        duplicates.add(t);
+      }
+    }
+
+    return duplicates;
+  }
 }
