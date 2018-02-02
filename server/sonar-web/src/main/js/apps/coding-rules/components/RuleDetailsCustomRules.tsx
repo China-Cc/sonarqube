@@ -20,12 +20,12 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import { sortBy } from 'lodash';
-import ConfirmButton from './ConfirmButton';
+import ConfirmButton from '../../../components/controls/ConfirmButton';
 import CustomRuleButton from './CustomRuleButton';
-import { searchRules, deleteRule } from '../../../api/rules';
-import { Rule, RuleDetails } from '../../../app/types';
 import DeferredSpinner from '../../../components/common/DeferredSpinner';
 import SeverityHelper from '../../../components/shared/SeverityHelper';
+import { searchRules, deleteRule } from '../../../api/rules';
+import { Rule, RuleDetails } from '../../../app/types';
 import { translate, translateWithParameters } from '../../../helpers/l10n';
 import { getRuleUrl } from '../../../helpers/urls';
 

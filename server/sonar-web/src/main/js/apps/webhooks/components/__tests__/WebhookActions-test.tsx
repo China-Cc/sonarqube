@@ -25,14 +25,21 @@ import { click } from '../../../../helpers/testUtils';
 const webhook = { key: '1', name: 'foo', url: 'http://foo.bar' };
 
 it('should render correctly', () => {
-  expect(
-    shallow(<WebhookActions refreshWebhooks={jest.fn(() => Promise.resolve())} webhook={webhook} />)
-  ).toMatchSnapshot();
+  expect(getWrapper()).toMatchSnapshot();
 });
 
 it('should display the update webhook form', () => {
-  const refresh = jest.fn(() => Promise.resolve());
-  const wrapper = shallow(<WebhookActions refreshWebhooks={refresh} webhook={webhook} />);
+  const wrapper = getWrapper();
   click(wrapper.find('.js-webhook-update'));
   expect(wrapper.find('CreateWebhookForm')).toHaveLength(1);
 });
+
+function getWrapper(props = {}) {
+  return shallow(
+    <WebhookActions
+      refreshWebhooks={jest.fn(() => Promise.resolve())}
+      webhook={webhook}
+      {...props}
+    />
+  );
+}

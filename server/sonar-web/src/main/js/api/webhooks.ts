@@ -30,6 +30,10 @@ export function createWebhook(data: {
   return postJSON('/api/webhooks/create', data).catch(throwGlobalError);
 }
 
+export function deleteWebhook(data: { key: string }): Promise<void | Response> {
+  return post('/api/webhooks/delete', data).catch(throwGlobalError);
+}
+
 export function searchWebhooks(data: {
   organization: string | undefined;
   project?: string;

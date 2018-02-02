@@ -18,12 +18,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import SimpleModal from '../../../components/controls/SimpleModal';
-import { translate } from '../../../helpers/l10n';
+import SimpleModal from './SimpleModal';
+import { translate } from '../../helpers/l10n';
 
 interface Props {
   children: (
-    props: { onClick: (event: React.SyntheticEvent<HTMLButtonElement>) => void }
+    props: {
+      onClick: (event?: React.SyntheticEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
+    }
   ) => React.ReactNode;
   confirmButtonText: string;
   confirmData?: string;
@@ -37,13 +39,16 @@ interface State {
   modal: boolean;
 }
 
-// TODO move this component to components/ and use everywhere!
+// TODO use everywhere!
 export default class ConfirmButton extends React.PureComponent<Props, State> {
   state: State = { modal: false };
 
-  handleButtonClick = (event: React.SyntheticEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.currentTarget.blur();
+  handleButtonClick = (event?: React.SyntheticEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.blur();
+    }
     this.setState({ modal: true });
   };
 
@@ -85,9 +90,13 @@ export default class ConfirmButton extends React.PureComponent<Props, State> {
                     onClick={onSubmitClick}>
                     {confirmButtonText}
                   </button>
-                  <a href="#" onClick={onCloseClick}>
+                  <button
+                    className="button-link"
+                    disabled={submitting}
+                    onClick={onCloseClick}
+                    type="reset">
                     {translate('cancel')}
-                  </a>
+                  </button>
                 </footer>
               </>
             )}

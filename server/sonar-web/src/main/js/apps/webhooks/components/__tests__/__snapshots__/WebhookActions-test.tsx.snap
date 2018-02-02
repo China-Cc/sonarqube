@@ -14,13 +14,13 @@ exports[`should render correctly 1`] = `
       update_verb
     </ActionsDropdownItem>
     <ActionsDropdownDivider />
-    <ActionsDropdownItem
-      className="js-webhook-delete"
-      destructive={true}
-      onClick={[Function]}
-    >
-      delete
-    </ActionsDropdownItem>
+    <ConfirmButton
+      confirmButtonText="delete"
+      isDestructive={true}
+      modalBody="webhooks.delete.confirm.foo"
+      modalHeader="webhooks.delete"
+      onConfirm={[Function]}
+    />
   </ActionsDropdown>
 </td>
 `;

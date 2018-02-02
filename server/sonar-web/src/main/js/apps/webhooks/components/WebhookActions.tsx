@@ -22,9 +22,11 @@ import ActionsDropdown, {
   ActionsDropdownItem,
   ActionsDropdownDivider
 } from '../../../components/controls/ActionsDropdown';
+import ConfirmButton from '../../../components/controls/ConfirmButton';
 import CreateWebhookForm from './CreateWebhookForm';
-import { translate } from '../../../helpers/l10n';
+import { translate, translateWithParameters } from '../../../helpers/l10n';
 import { Webhook } from '../../../app/types';
+import { deleteWebhook, updateWebhook } from '../../../api/webhooks';
 
 interface Props {
   refreshWebhooks: () => Promise<void>;
@@ -32,13 +34,12 @@ interface Props {
 }
 
 interface State {
-  deleting: boolean;
   updating: boolean;
 }
 
 export default class WebhookActions extends React.PureComponent<Props, State> {
   mounted: boolean;
-  state: State = { deleting: false, updating: false };
+  state: State = { updating: false };
 
   componentDidMount() {
     this.mounted = true;
@@ -48,15 +49,22 @@ export default class WebhookActions extends React.PureComponent<Props, State> {
     this.mounted = false;
   }
 
-  handleDeleteClick = () => this.setState({ deleting: true });
+  handleDelete = () =>
+    deleteWebhook({ key: this.props.webhook.key }).then(this.props.refreshWebhooks);
 
-  handleDeletingStop = () => this.setState({ deleting: false });
+  handleUpdate = (data: { name: string; url: string }) =>
+    updateWebhook({ ...data, key: this.props.webhook.key }).then(
+      this.props.refreshWebhooks,
+      () => {}
+    );
 
   handleUpdateClick = () => this.setState({ updating: true });
 
   handleUpdatingStop = () => this.setState({ updating: false });
 
   render() {
+    const { webhook } = this.props;
+
     return (
       <td className="thin nowrap text-right">
         <ActionsDropdown className="ig-spacer-left">
@@ -64,30 +72,30 @@ export default class WebhookActions extends React.PureComponent<Props, State> {
             {translate('update_verb')}
           </ActionsDropdownItem>
           <ActionsDropdownDivider />
-          <ActionsDropdownItem
-            className="js-webhook-delete"
-            destructive={true}
-            onClick={this.handleDeleteClick}>
-            {translate('delete')}
-          </ActionsDropdownItem>
+          <ConfirmButton
+            confirmButtonText={translate('delete')}
+            isDestructive={true}
+            modalBody={translateWithParameters('webhooks.delete.confirm', webhook.name)}
+            modalHeader={translate('webhooks.delete')}
+            onConfirm={this.handleDelete}>
+            {({ onClick }) => (
+              <ActionsDropdownItem
+                className="js-webhook-delete"
+                destructive={true}
+                onClick={onClick}>
+                {translate('delete')}
+              </ActionsDropdownItem>
+            )}
+          </ConfirmButton>
         </ActionsDropdown>
 
         {this.state.updating && (
           <CreateWebhookForm
             onClose={this.handleUpdatingStop}
-            onDone={this.props.refreshWebhooks}
-            webhook={this.props.webhook}
+            onDone={this.handleUpdate}
+            webhook={webhook}
           />
         )}
-
-        {/*this.state.deleting && (
-          <DeleteBranchModal
-            branch={branch}
-            component={component}
-            onClose={this.handleDeletingStop}
-            onDelete={this.handleChange}
-          />
-        )*/}
       </td>
     );
   }
