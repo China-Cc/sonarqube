@@ -19,7 +19,11 @@
  */
 import * as React from 'react';
 import { translateWithParameters } from '../../../helpers/l10n';
-import { IdentityProvider } from '../../../api/users';
+import * as theme from '../../../app/theme';
+import { IdentityProvider } from '../../../app/types';
+import Tooltip from '../../../components/controls/Tooltip';
+import HelpIcon from '../../../components/icons-components/HelpIcon';
+import { getTextColor } from '../../../helpers/colors';
 import { getBaseUrl } from '../../../helpers/urls';
 import './OAuthProviders.css';
 
@@ -41,7 +45,10 @@ export default function OAuthProviders(props: Props) {
                 `${getBaseUrl()}/sessions/init/${identityProvider.key}` +
                 `?return_to=${encodeURIComponent(props.returnTo)}`
               }
-              style={{ backgroundColor: identityProvider.backgroundColor }}
+              style={{
+                backgroundColor: identityProvider.backgroundColor,
+                color: getTextColor(identityProvider.backgroundColor, theme.secondFontColor)
+              }}
               title={formatLabel(identityProvider.name)}>
               <img
                 alt={identityProvider.name}
@@ -51,6 +58,13 @@ export default function OAuthProviders(props: Props) {
               />
               <span>{formatLabel(identityProvider.name)}</span>
             </a>
+            {identityProvider.help && (
+              <Tooltip overlay={identityProvider.help}>
+                <div className="oauth-providers-help">
+                  <HelpIcon fill={theme.blue} />
+                </div>
+              </Tooltip>
+            )}
           </li>
         ))}
       </ul>
