@@ -19,14 +19,20 @@
  */
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import PageHeader from '../PageHeader';
+import WebhookActions from '../WebhookActions';
+import { click } from '../../../../helpers/testUtils';
+
+const webhook = { key: '1', name: 'foo', url: 'http://foo.bar' };
 
 it('should render correctly', () => {
   expect(
-    shallow(
-      <PageHeader loading={true}>
-        <div />
-      </PageHeader>
-    )
+    shallow(<WebhookActions refreshWebhooks={jest.fn(() => Promise.resolve())} webhook={webhook} />)
   ).toMatchSnapshot();
+});
+
+it('should display the update webhook form', () => {
+  const refresh = jest.fn(() => Promise.resolve());
+  const wrapper = shallow(<WebhookActions refreshWebhooks={refresh} webhook={webhook} />);
+  click(wrapper.find('.js-webhook-update'));
+  expect(wrapper.find('CreateWebhookForm')).toHaveLength(1);
 });

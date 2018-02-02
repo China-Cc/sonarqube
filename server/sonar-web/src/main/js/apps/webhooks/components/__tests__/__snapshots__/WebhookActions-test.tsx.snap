@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render correctly 1`] = `
+<td
+  className="thin nowrap text-right"
+>
+  <ActionsDropdown
+    className="ig-spacer-left"
+  >
+    <ActionsDropdownItem
+      className="js-webhook-update"
+      onClick={[Function]}
+    >
+      update_verb
+    </ActionsDropdownItem>
+    <ActionsDropdownDivider />
+    <ActionsDropdownItem
+      className="js-webhook-delete"
+      destructive={true}
+      onClick={[Function]}
+    >
+      delete
+    </ActionsDropdownItem>
+  </ActionsDropdown>
+</td>
+`;

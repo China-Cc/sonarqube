@@ -17,13 +17,30 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import { getJSON } from '../helpers/request';
+import { getJSON, post, postJSON } from '../helpers/request';
 import throwGlobalError from '../app/utils/throwGlobalError';
 import { Webhook } from '../app/types';
+
+export function createWebhook(data: {
+  organization: string | undefined;
+  project?: string;
+  name: string;
+  url: string;
+}): Promise<{ webhook: Webhook }> {
+  return postJSON('/api/webhooks/create', data).catch(throwGlobalError);
+}
 
 export function searchWebhooks(data: {
   organization: string | undefined;
   project?: string;
 }): Promise<{ webhooks: Webhook[] }> {
   return getJSON('/api/webhooks/search', data).catch(throwGlobalError);
+}
+
+export function updateWebhook(data: {
+  key: string;
+  name: string;
+  url: string;
+}): Promise<void | Response> {
+  return post('/api/webhooks/update', data).catch(throwGlobalError);
 }

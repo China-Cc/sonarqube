@@ -19,27 +19,33 @@
  */
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import WebhooksList from '../WebhooksList';
+import CreateWebhookForm from '../CreateWebhookForm';
+import { submit } from '../../../../helpers/testUtils';
 
-const webhooks = [
-  { key: '1', name: 'my webhook', url: 'http://webhook.target' },
-  { key: '2', name: 'jenkins webhook', url: 'http://jenkins.target' }
-];
+const webhook = { key: '1', name: 'foo', url: 'http://foo.bar' };
 
-it('should correctly render empty webhook list', () => {
-  expect(getWrapper({ webhooks: [] })).toMatchSnapshot();
+it('should render correctly when creating a new webhook', () => {
+  expect(getWrapper()).toMatchSnapshot();
 });
 
-it('should correctly render the webhooks', () => {
-  expect(getWrapper()).toMatchSnapshot();
+it('should render correctly when updating a webhook', () => {
+  expect(getWrapper({ webhook })).toMatchSnapshot();
+});
+
+it('should correctly call onDone and onClose after submit', async () => {
+  const onClose = jest.fn();
+  const onDone = jest.fn(() => Promise.resolve());
+  const wrapper = getWrapper({ onClose, onDone, webhook });
+  submit(wrapper.find('form'));
+  expect(wrapper).toMatchSnapshot();
+
+  await new Promise(setImmediate);
+  expect(onDone).toHaveBeenCalledWith({ name: webhook.name, url: webhook.url });
+  expect(onClose).toHaveBeenCalled();
 });
 
 function getWrapper(props = {}) {
   return shallow(
-    <WebhooksList
-      webhooks={webhooks}
-      refreshWebhooks={jest.fn(() => Promise.resolve())}
-      {...props}
-    />
+    <CreateWebhookForm onClose={jest.fn()} onDone={jest.fn(() => Promise.resolve())} {...props} />
   );
 }
